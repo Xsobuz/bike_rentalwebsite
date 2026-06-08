@@ -1,0 +1,121 @@
+<!-- contact.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us | Biker House</title>
+    <style>
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+        /* 全局固定背景，彻底修复不显示问题 */
+        body{
+            background: linear-gradient(135deg, #0f172a, #1e293b, #0f172a) !important;
+            background-attachment: fixed !important;
+            min-height:100vh;
+            color:#fff;
+        }
+        .navbar{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            padding:20px 60px;
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.12);
+            position:sticky;
+            top:0;
+            z-index:99;
+        }
+        .logo{
+            font-size:26px;
+            font-weight:700;
+            color:#ffffff;
+        }
+        .nav-links{
+            display:flex;
+            align-items:center;
+            gap:18px;
+        }
+        .nav-links a{
+            color:#f1f1f1;
+            text-decoration:none;
+            font-size:15px;
+            padding:8px 16px;
+            border-radius:30px;
+            transition:0.3s;
+        }
+        .nav-links a:hover{
+            background:rgba(255,255,255,0.1);
+        }
+        .login-btn{border:1px solid rgba(255,255,255,0.2);}
+        .register-btn{background:rgba(255,255,255,0.95);color:#000 !important;font-weight:600;}
+
+        .contact-container{
+            padding:80px 50px;
+            max-width:900px;
+            margin:0 auto;
+            text-align:center;
+        }
+        .contact-container h1{
+            font-size:42px;
+            color:#38bdf8;
+            margin-bottom:40px;
+        }
+        .contact-box{
+            background:rgba(255,255,255,0.06);
+            backdrop-filter: blur(18px);
+            border:1px solid rgba(255,255,255,0.12);
+            padding:45px;
+            border-radius:24px;
+        }
+        .contact-box p{
+            font-size:17px;
+            margin:18px 0;
+            color:#cbd5e1;
+        }
+        .contact-box strong{
+            color:#38bdf8;
+        }
+        footer{
+            text-align:center;
+            padding:30px;
+            background:rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+            color:#94a3b8;
+            border-top:1px solid rgba(255,255,255,0.08);
+        }
+    </style>
+</head>
+<body>
+<div class="navbar">
+    <div class="logo">BIKER HOUSE</div>
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/about">About</a>
+        <a href="/">Bikes</a>
+        <a href="/contact">Contact</a>
+        {% if session.username %}
+            <a href="{{ url_for('logout') }}" class="login-btn">Logout ({{ session.username }})</a>
+        {% else %}
+            <a href="{{ url_for('login') }}" class="login-btn">Login</a>
+            <a href="{{ url_for('register') }}" class="register-btn">Register</a>
+        {% endif %}
+    </div>
+</div>
+<div class="contact-container">
+    <h1>Contact Us</h1>
+    <div class="contact-box">
+        <p><strong>Address:</strong> West Campus Guizhou University North Gate, Huaxi District, Guiyang City, Guizhou Province</p>
+        <p><strong>Phone:</strong> +86 15508501024</p>
+        <p><strong>Email:</strong> enamulhaquesobuz@qq.com</p>
+        <p><strong>Working Hours:</strong> 09:00 AM - 09:00 PM Daily</p>
+    </div>
+</div>
+<footer><p>© 2026 Biker House | All Rights Reserved</p></footer>
+</body>
+</html>

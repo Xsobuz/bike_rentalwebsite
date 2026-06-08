@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biker House | Glass Vibe UI</title>
+    <style>
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* FULL SCREEN AUTO SLIDING BACKGROUND - FIXED NO LOOP FLASH */
+        .bg-slideshow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            animation: slideBg 24s infinite linear;
+        }
+
+        @keyframes slideBg {
+            0% { background-image: url("/static/images/slide1.jpg"); }
+            24% { background-image: url("/static/images/slide2.jpg"); }
+            48% { background-image: url("/static/images/slide3.jpg"); }
+            72% { background-image: url("/static/images/slide4.jpg"); }
+            96% { background-image: url("/static/images/slide1.jpg"); }
+            100% { background-image: url("/static/images/slide1.jpg"); }
+        }
+
+        html, body {
+            min-height: 100vh;
+            color:#fff;
+            background: transparent;
+        }
+
+        /* ========== BIKE DETAIL POPUP (YOUR PHOTO STYLE INTERFACE) ========== */
+        .rent-popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: 9999;
+        }
+
+        .rent-popup-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            animation: slideBg 24s infinite linear;
+        }
+
+        .rent-popup-content {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.55);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+        }
+
+        /* Main Bike Detail Card (Matches your reference photo layout) */
+        .bike-detail-card {
+            width: 100%;
+            max-width: 950px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 28px;
+            overflow: hidden;
+            backdrop-filter: blur(20px);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .detail-img-wrap {
+            width: 100%;
+            height: 100%;
+            min-height: 340px;
+        }
+
+        .detail-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .detail-info-wrap {
+            padding: 35px;
+            text-align: left;
+        }
+
+        .detail-info-wrap h2 {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        .detail-type {
+            color: #94a3b8;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .detail-price {
+            font-size: 32px;
+            color: #38bdf8;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .detail-specs-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 25px 0;
+        }
+
+        .detail-spec-box {
+            background: rgba(255,255,255,0.08);
+            padding: 15px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .detail-spec-box p {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-bottom: 5px;
+        }
+
+        .detail-spec-box h4 {
+            font-size: 16px;
+            color: #38bdf8;
+        }
+
+        .detail-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .book-now-btn {
+            flex: 1;
+            padding: 14px;
+            background: #38bdf8;
+            color: #000;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .book-now-btn:hover {
+            background: #0ea5e9;
+        }
+
+        .close-detail-btn {
+            flex: 1;
+            padding: 14px;
+            background: transparent;
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .close-detail-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* Payment & Register Modal Styles */
+        .custom-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(8px);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-card {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            max-width: 450px;
+            width: 90%;
+            backdrop-filter: blur(20px);
+        }
+
+        .modal-card h3 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        .modal-card p {
+            color: #cbd5e1;
+            margin-bottom: 25px;
+            font-size: 16px;
+        }
+
+        .modal-btn-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .modal-btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            border: none;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            text-decoration: none;
+        }
+
+        .primary-btn {
+            background: #38bdf8;
+            color: #000;
+        }
+
+        .primary-btn:hover {
+            background: #0ea5e9;
+        }
+
+        .ghost-btn {
+            background: transparent;
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .ghost-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .pay-full-btn {
+            width: 100%;
+            margin: 8px 0;
+            padding: 14px;
+            font-size: 16px;
+        }
+
+        .wechat-pay {
+            background: #07C160;
+            color: #fff;
+        }
+
+        .alipay-pay {
+            background: #1677ff;
+            color: #fff;
+        }
+
+        /* Glass Navbar */
+        .navbar{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            padding:20px 60px;
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.12);
+            position:sticky;
+            top:0;
+            z-index:99;
+        }
+
+        .logo{
+            font-size:26px;
+            font-weight:700;
+            color:#ffffff;
+            letter-spacing:1px;
+        }
+
+        .nav-links{
+            display:flex;
+            align-items:center;
+            gap:18px;
+        }
+
+        .nav-links a{
+            color:#f1f1f1;
+            text-decoration:none;
+            font-size:15px;
+            padding:8px 16px;
+            border-radius:30px;
+            transition:0.3s ease;
+        }
+
+        .nav-links a:hover{
+            background:rgba(255,255,255,0.1);
+        }
+
+        .login-btn{
+            border:1px solid rgba(255,255,255,0.2);
+        }
+
+        .register-btn{
+            background: rgba(255,255,255,0.95);
+            color:#000 !important;
+            font-weight:600;
+        }
+
+        .hero{
+            height:85vh;
+            width:100%;
+            position:relative;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            text-align:center;
+        }
+
+        .hero-content h1{
+            font-size:56px;
+            margin-bottom:18px;
+            font-weight:700;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.4);
+        }
+
+        .hero-content h1 span{
+            color:#38bdf8;
+        }
+
+        .hero-content p{
+            font-size:18px;
+            color:#f1f1f1;
+            margin-bottom:40px;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .search-form{
+            display:flex;
+            gap:12px;
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border:1px solid rgba(255,255,255,0.15);
+            padding:16px 24px;
+            border-radius:50px;
+        }
+
+        .search-form input{
+            flex:1;
+            padding:12px 20px;
+            border-radius:30px;
+            border:none;
+            background:rgba(255,255,255,0.1);
+            color:#fff;
+            font-size:15px;
+            outline:none;
+            backdrop-filter: blur(10px);
+        }
+
+        .search-form input::placeholder{
+            color:#cbd5e1;
+        }
+
+        .search-form button{
+            padding:12px 32px;
+            background: #38bdf8;
+            color:#000;
+            border:none;
+            border-radius:50px;
+            font-weight:600;
+            cursor:pointer;
+            transition:0.3s;
+        }
+
+        .search-form button:hover{
+            background:#0ea5e9;
+        }
+
+        .stats{
+            display:flex;
+            justify-content:center;
+            gap:40px;
+            padding:60px 0;
+        }
+
+        .stat-item{
+            background:rgba(255,255,255,0.08);
+            backdrop-filter: blur(16px);
+            border:1px solid rgba(255,255,255,0.12);
+            padding:25px 40px;
+            border-radius:20px;
+        }
+
+        .stat-item h2{
+            font-size:42px;
+            color:#38bdf8;
+            margin-bottom:8px;
+        }
+
+        .stat-item p{
+            color:#cbd5e1;
+            font-size:14px;
+        }
+
+        .bike-section{
+            padding:40px 50px 80px;
+        }
+
+        .section-title{
+            text-align:center;
+            font-size:38px;
+            margin-bottom:50px;
+            font-weight:600;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .bike-grid{
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+            gap:30px;
+        }
+
+        .bike-card{
+            background:rgba(255,255,255,0.06);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border:1px solid rgba(255,255,255,0.12);
+            border-radius:24px;
+            overflow:hidden;
+            transition:0.4s ease;
+        }
+
+        .bike-card:hover{
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            border-color:rgba(56,189,248,0.3);
+        }
+
+        .bike-card img{
+            width:100% !important;
+            height:220px !important;
+            object-fit:cover !important;
+            display:block !important;
+            background:#1e293b !important;
+            border:none !important;
+        }
+
+        .bike-info{
+            padding:24px;
+        }
+
+        .bike-info h3{
+            font-size:20px;
+            margin-bottom:8px;
+        }
+
+        .bike-type{
+            color:#94a3b8;
+            font-size:14px;
+            margin-bottom:16px;
+        }
+
+        .bike-specs{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap:10px;
+            margin:20px 0;
+        }
+
+        .spec-item{
+            background:rgba(255,255,255,0.08);
+            border:1px solid rgba(255,255,255,0.1);
+            padding:12px;
+            border-radius:14px;
+            text-align:center;
+        }
+
+        .spec-item p{
+            font-size:12px;
+            color:#94a3b8;
+            margin-bottom:4px;
+        }
+
+        .spec-item h4{
+            font-size:15px;
+            color:#38bdf8;
+        }
+
+        .price{
+            color:#38bdf8;
+            font-size:22px;
+            font-weight:bold;
+            margin:15px 0;
+        }
+
+        .rent-btn{
+            display:inline-block;
+            width:100%;
+            text-align:center;
+            padding:12px;
+            background:#38bdf8;
+            color:#000;
+            text-decoration:none;
+            border-radius:14px;
+            font-weight:600;
+            transition:0.3s;
+            cursor: pointer;
+        }
+
+        .rent-btn:hover{
+            background:#0ea5e9;
+        }
+
+        .no-result{
+            text-align:center;
+            padding:80px 0;
+            font-size:20px;
+            color:#fff;
+        }
+
+        footer{
+            text-align:center;
+            padding:30px;
+            background:rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+            color:#94a3b8;
+            border-top:1px solid rgba(255,255,255,0.08);
+        }
+
+        .chat-toggle-btn{
+            position:fixed;
+            bottom:30px;
+            right:30px;
+            width:65px;
+            height:65px;
+            border-radius:50%;
+            background:rgba(56,189,248,0.85);
+            backdrop-filter: blur(10px);
+            border:1px solid rgba(255,255,255,0.2);
+            color:#000;
+            font-size:16px;
+            font-weight:bold;
+            cursor:pointer;
+            z-index:999;
+        }
+
+        #chatbot{
+            position:fixed;
+            bottom:105px;
+            right:30px;
+            width:340px;
+            background:rgba(30,41,59,0.85);
+            backdrop-filter: blur(20px);
+            border:1px solid rgba(255,255,255,0.12);
+            border-radius:20px;
+            display:none;
+            z-index:998;
+        }
+
+        .chat-head{
+            padding:14px;
+            text-align:center;
+            font-weight:600;
+            border-bottom:1px solid rgba(255,255,255,0.1);
+            color:#38bdf8;
+        }
+
+        #chat-messages{
+            height:280px;
+            padding:15px;
+            overflow-y:auto;
+            font-size:14px;
+        }
+
+        .chat-input-area{
+            display:flex;
+            border-top:1px solid rgba(255,255,255,0.1);
+        }
+
+        #chat-input{
+            flex:1;
+            padding:14px;
+            background:rgba(255,255,255,0.05);
+            border:none;
+            color:#fff;
+            outline:none;
+        }
+
+        .chat-input-area button{
+            background:#38bdf8;
+            border:none;
+            padding:0 20px;
+            cursor:pointer;
+            font-weight:600;
+        }
+    </style>
+</head>
+<body>
+
+<!-- AUTO SLIDING BACKGROUND LAYER -->
+<div class="bg-slideshow"></div>
+
+<!-- RENT DETAIL POPUP (EXACT PHOTO STYLE INTERFACE) -->
+<div class="rent-popup" id="rentPopup">
+    <div class="rent-popup-bg"></div>
+    <div class="rent-popup-content">
+        <div class="bike-detail-card">
+            <div class="detail-img-wrap">
+                <img id="popupBikeImg" src="" alt="Bike Image">
+            </div>
+            <div class="detail-info-wrap">
+                <h2 id="popupBikeName">Bike Name</h2>
+                <p class="detail-type" id="popupBikeType">Bike Type</p>
+                <div class="detail-price" id="popupBikePrice">$0 / Day</div>
+
+                <div class="detail-specs-grid">
+                    <div class="detail-spec-box">
+                        <p>Displacement</p>
+                        <h4 id="popupBikeCc">0 CC</h4>
+                    </div>
+                    <div class="detail-spec-box">
+                        <p>Horsepower</p>
+                        <h4 id="popupBikeHp">0 HP</h4>
+                    </div>
+                    <div class="detail-spec-box">
+                        <p>Weight</p>
+                        <h4 id="popupBikeWeight">0 KG</h4>
+                    </div>
+                    <div class="detail-spec-box">
+                        <p>Mileage</p>
+                        <h4 id="popupBikeMileage">0 KM/L</h4>
+                    </div>
+                </div>
+
+                <div class="detail-buttons">
+                    <button class="book-now-btn" onclick="checkUserBooking()">Book Now</button>
+                    <button class="close-detail-btn" onclick="closeRentPopup()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Guest User Register/Login Modal -->
+<div class="custom-modal" id="guestModal">
+    <div class="modal-card">
+        <h3>Registration Required</h3>
+        <p>Please register or log in first to complete bike booking.</p>
+        <div class="modal-btn-group">
+            <a href="{{ url_for('register') }}" class="modal-btn primary-btn">Register Now</a>
+            <a href="{{ url_for('login') }}" class="modal-btn ghost-btn">Login</a>
+            <button class="modal-btn ghost-btn" onclick="closeAllModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Logged-in User Payment Modal -->
+<div class="custom-modal" id="paymentModal">
+    <div class="modal-card">
+        <h3>Select Payment Method</h3>
+        <p>Complete your bike rental payment to confirm booking</p>
+        <button class="modal-btn pay-full-btn wechat-pay">Pay with WeChat</button>
+        <button class="modal-btn pay-full-btn alipay-pay">Pay with Alipay</button>
+        <button class="modal-btn ghost-btn" style="margin-top:15px;" onclick="closeAllModal()">Cancel</button>
+    </div>
+</div>
+
+<div class="navbar">
+    <div class="logo">BIKER HOUSE</div>
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/about">About</a>
+        <a href="/">Bikes</a>
+        <a href="/contact">Contact</a>
+
+        {% if session.username %}
+            <a href="{{ url_for('logout') }}" class="login-btn">Logout ({{ session.username }})</a>
+        {% else %}
+            <a href="{{ url_for('login') }}" class="login-btn">Login</a>
+            <a href="{{ url_for('register') }}" class="register-btn">Register</a>
+        {% endif %}
+    </div>
+</div>
+
+<section class="hero">
+    <div class="hero-content">
+        <h1>PREMIUM MOTORCYCLE RENTAL <span>BIKER HOUSE</span></h1>
+        <p>Ride with comfort & style. Rent premium branded superbikes for your trips & adventures.</p>
+        <form class="search-form" action="/" method="GET">
+            <input type="text" name="search" placeholder="Search bikes..." value="{{ search_query }}">
+            <button type="submit">Search</button>
+        </form>
+    </div>
+</section>
+
+<section class="stats">
+    <div class="stat-item"><h2>45+</h2><p>Available Bikes</p></div>
+    <div class="stat-item"><h2>1100+</h2><p>Happy Customers</p></div>
+    <div class="stat-item"><h2>780+</h2><p>Total Bookings</p></div>
+</section>
+
+<section class="bike-section">
+    <h2 class="section-title">Our Premium Bike Collection</h2>
+    <div class="bike-grid">
+        {% if bikes %}
+            {% for bike in bikes %}
+            <div class="bike-card">
+                <img src="{{ url_for('static', filename='images/' + bike.image) }}" alt="{{ bike.name }}" loading="eager">
+                <div class="bike-info">
+                    <h3>{{ bike.name }}</h3>
+                    <p class="bike-type">Type: {{ bike.type }}</p>
+                    
+                    <div class="bike-specs">
+                        <div class="spec-item">
+                            <p>Displacement</p>
+                            <h4>{{ bike.cc }}</h4>
+                        </div>
+                        <div class="spec-item">
+                            <p>Horsepower</p>
+                            <h4>{{ bike.horsepower }}</h4>
+                        </div>
+                        <div class="spec-item">
+                            <p>Weight</p>
+                            <h4>{{ bike.weight }}</h4>
+                        </div>
+                        <div class="spec-item">
+                            <p>Mileage</p>
+                            <h4>{{ bike.mileage }}</h4>
+                        </div>
+                    </div>
+
+                    <div class="price">{{ bike.currency }}{{ bike.price }} / Day</div>
+                    <a class="rent-btn" onclick="openRentPopup('{{ bike.image }}','{{ bike.name }}','{{ bike.type }}','{{ bike.cc }}','{{ bike.horsepower }}','{{ bike.weight }}','{{ bike.mileage }}','{{ bike.currency }}{{ bike.price }}')">Rent Now</a>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="no-result">No bikes found for your search!</div>
+        {% endif %}
+    </div>
+</section>
+
+<footer><p>© 2026 Biker House | All Rights Reserved</p></footer>
+
+<button class="chat-toggle-btn" onclick="toggleChat()">AI</button>
+<div id="chatbot">
+    <div class="chat-head">Venom AI Assistant</div>
+    <div id="chat-messages"></div>
+    <div class="chat-input-area">
+        <input type="text" id="chat-input" placeholder="Message Venom AI...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+</div>
+
+<script>
+// Chat functions
+let chatOpen = false;
+function toggleChat(){
+    const box = document.getElementById('chatbot');
+    chatOpen = !chatOpen;
+    box.style.display = chatOpen ? 'block' : 'none';
+}
+function sendMessage(){
+    const input=document.getElementById('chat-input');
+    const msg=input.value.trim();
+    if(!msg)return;
+    const m=document.getElementById('chat-messages');
+    m.innerHTML+=`<div style="text-align:right;margin:6px 0;">You: ${msg}</div>`;
+    input.value='';
+    fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg})})
+    .then(r=>r.json()).then(d=>{
+        m.innerHTML+=`<div style="text-align:left;margin:6px 0;">Venom AI: ${d.reply}</div>`;
+        m.scrollTop=m.scrollHeight;
+    });
+}
+
+// Dynamic Rent Popup (Matches your photo interface + loads exact bike data)
+function openRentPopup(img,name,type,cc,hp,weight,mile,price){
+    document.getElementById('popupBikeImg').src = "/static/images/"+img;
+    document.getElementById('popupBikeName').innerText = name;
+    document.getElementById('popupBikeType').innerText = "Type: "+type;
+    document.getElementById('popupBikePrice').innerText = price+" / Day";
+    document.getElementById('popupBikeCc').innerText = cc;
+    document.getElementById('popupBikeHp').innerText = hp;
+    document.getElementById('popupBikeWeight').innerText = weight;
+    document.getElementById('popupBikeMileage').innerText = mile;
+    document.getElementById('rentPopup').style.display = 'block';
+}
+function closeRentPopup(){
+    document.getElementById('rentPopup').style.display = 'none';
+}
+
+// Close all modals
+function closeAllModal(){
+    document.getElementById('guestModal').style.display = 'none';
+    document.getElementById('paymentModal').style.display = 'none';
+}
+
+// Core booking logic (check login status)
+function checkUserBooking(){
+    // Flask Jinja session check
+    {% if session.username %}
+        // Logged in: show payment options
+        closeRentPopup();
+        document.getElementById('paymentModal').style.display = 'flex';
+    {% else %}
+        // Not logged in: show register/login prompt
+        closeRentPopup();
+        document.getElementById('guestModal').style.display = 'flex';
+    {% endif %}
+}
+</script>
+</body>
+</html>
