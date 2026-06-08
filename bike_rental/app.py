@@ -22,6 +22,7 @@ db = SQLAlchemy(app)
 class Bike(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
+    image = db.Column(db.String(100), nullable=False)  # ✅ ADDED IMAGE FIELD
     price = db.Column(db.Integer, nullable=False)
     cc = db.Column(db.Integer, nullable=False)
     hp = db.Column(db.Integer, nullable=False)
@@ -60,7 +61,7 @@ def dogesh_ai(user_prompt):
 # Routes
 @app.route('/')
 def home():
-    premium_bikes = Bike.query.filter_by(is_premium=True).limit(2).all()
+    premium_bikes = Bike.query.filter_by(is_premium=True).limit(7).all()
     return render_template('index.html', bikes=premium_bikes)
 
 @app.route('/all-bikes')
@@ -114,16 +115,13 @@ def init_bikes():
     db.drop_all()
     db.create_all()
     bike_list = [
-        Bike(name="Yamaha R1", price=399, cc=998, hp=200, weight=199, mileage=15.5, is_premium=True),
-        Bike(name="Ducati V4", price=459, cc=1103, hp=214, weight=195, mileage=14.8, is_premium=True),
-        Bike(name="BMW S1000RR", price=429, cc=999, hp=205, weight=197, mileage=15.2),
-        Bike(name="Kawasaki ZX10R", price=389, cc=998, hp=197, weight=200, mileage=15.0),
-        Bike(name="Honda CBR1000RR", price=379, cc=999, hp=189, weight=201, mileage=16.0),
-        Bike(name="Suzuki GSXR1000", price=369, cc=999, hp=199, weight=202, mileage=15.8),
-        Bike(name="Aprilia RSV4", price=449, cc=1099, hp=217, weight=189, mileage=14.5),
-        Bike(name="KTM RC1000", price=399, cc=1000, hp=200, weight=190, mileage=15.1),
-        Bike(name="Triumph Daytona", price=385, cc=765, hp=128, weight=165, mileage=18.2),
-        Bike(name="MV Agusta F4", price=489, cc=998, hp=208, weight=190, mileage=14.9),
+        Bike(name="Bajaj", image="bajaj.jpg", price=75, cc=160, hp=15, weight=148, mileage=42, is_premium=True),
+        Bike(name="BMW", image="bmw.jpg", price=320, cc=1000, hp=165, weight=210, mileage=18, is_premium=True),
+        Bike(name="CFMoto", image="cfmoto.jpg", price=190, cc=450, hp=48, weight=205, mileage=25),
+        Bike(name="Hayabusa", image="hayabusa.jpg", price=450, cc=1340, hp=197, weight=266, mileage=14),
+        Bike(name="Hero", image="hero-bike.jpg", price=60, cc=125, hp=11, weight=132, mileage=50),
+        Bike(name="Suzuki", image="suzuki.jpg", price=240, cc=600, hp=100, weight=193, mileage=22),
+        Bike(name="Yamaha", image="yamaha.jpg", price=270, cc=890, hp=119, weight=197, mileage=20),
     ]
     db.session.bulk_save_objects(bike_list)
     db.session.commit()
