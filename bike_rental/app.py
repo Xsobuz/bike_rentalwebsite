@@ -1,72 +1,131 @@
-try:
-    from dotenv import load_dotenv
-    load_dotenv()
-except ImportError:
-    pass
-
-from flask import Flask, render_template, request, session, redirect, url_for, flash
+from flask import Flask, render_template, request, session, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
-import random
 import requests
-import os
 
-# Initialize Flask App
 app = Flask(__name__)
-app.secret_key = "bikehouse_secure_2026"
+app.secret_key = "bikerhouse_secure_2026"
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///bikehouse.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SESSION_PERMANENT'] = False
 
 db = SQLAlchemy(app)
 
-# Database Models
+# =============================
+# YOUR GROQ API KEY (WORKING)
+# =============================
+GROQ_API_KEY = "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"
+GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
+
 class Bike(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    image = db.Column(db.String(100), nullable=False)  # ✅ ADDED IMAGE FIELD
+    image = db.Column(db.String(100), nullable=False)
+    type = db.Column(db.String(100), nullable=False)
     price = db.Column(db.Integer, nullable=False)
-    cc = db.Column(db.Integer, nullable=False)
-    hp = db.Column(db.Integer, nullable=False)
-    weight = db.Column(db.Integer, nullable=False)
-    mileage = db.Column(db.Float, nullable=False)
-    is_premium = db.Column(db.Boolean, default=False)
+    cc = db.Column(db.String(100), nullable=False)
+    horsepower = db.Column(db.String(100), nullable=False)
+    weight = db.Column(db.String(100), nullable=False)
+    mileage = db.Column(db.String(100), nullable=False)
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
+    fullname = db.Column(db.String(100), nullable=True)
+    phone = db.Column(db.String(20), nullable=True)
 
-# Load DeepSeek API Keys from Render Environment Variables
-DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
-DEEPSEEK_URL = os.getenv("DEEPSEEK_API_URL", "https://api.deepseek.com/v1/chat/completions")
+@app.route('/set-lang/<lang>')
+def set_language(lang):
+    if lang in ['en','cn']:
+        session['lang'] = lang
+    return redirect(request.referrer or '/')
 
-def dogesh_ai(user_prompt):
+# --------------------------
+# GROQ AI CHAT (100% FIXED)
+# --------------------------
+@app.route('/api/chat', methods=['POST'])
+def api_chat():
+    user_message = request.form.get('msg', '').strip()
+    if not user_message:
+        return "Please type your question."
+
     headers = {
-        "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+        "Authorization": f"Bearer {GROQ_API_KEY}",
         "Content-Type": "application/json"
     }
-    payload = {
-        "model": "deepseek-chat",
+
+    data = {
+        "model": "llama3-8b-8192",
         "messages": [
-            {"role": "system", "content": "You are Dogesh AI, professional motorcycle consultant for Bike House rental. Answer questions simply and friendly."},
-            {"role": "user", "content": user_prompt}
+            {
+                "role": "system",
+                "content": "You are Jakson, Biker House motorcycle rental assistant. Be friendly, short, clear. Answer in English or Chinese. Only answer about bikes, rental, prices, booking, services."
+            },
+            {
+                "role": "user",
+                "content": user_message
+            }
         ],
         "temperature": 0.7
     }
-    try:
-        res = requests.post(DEEPSEEK_URL, json=payload, headers=headers, timeout=15)
-        return res.json()["choices"][0]["message"]["content"]
-    except Exception as e:
-        return "AI service unavailable right now, please try again later."
 
-# Routes
-@app.route('/')
-def home():
-    premium_bikes = Bike.query.filter_by(is_premium=True).limit(7).all()
-    return render_template('index.html', bikes=premium_bikes)
+    try:
+        response = requests.post(GROQ_API_URL, headers=headers, json=data, timeout=15)
+        response_data = response.json()
+
+        if "choices" in response_data:
+            return response_data["choices"][0]["message"]["content"].strip()
+        elif "error" in response_data:
+            return f"AI Error: {response_data['error']['message']}"
+        else:
+            return "Sorry, AI is temporarily unavailable. Try again later."
+    except Exception as e:
+        print("Groq Error:", str(e))
+        return "Cannot connect to AI. Please check internet or API key."
+
+# -----------------------------------------------------------------------------------
+
+@app.route('/save-booking', methods=['POST'])
+def save_booking():
+    fullname = request.form.get('fullname', '').strip()
+    phone = request.form.get('phone', '').strip()
+    address = request.form.get('address', '').strip()
+    days = int(request.form.get('days', 1))
+    bike_name = request.form.get('bike_name', '')
+    daily_price = int(request.form.get('bike_price', 0))
+    total_price = daily_price * days
+
+    booking_info = {
+        'fullname': fullname,
+        'phone': phone,
+        'address': address,
+        'days': days,
+        'bike_name': bike_name,
+        'daily_price': daily_price,
+        'total_price': total_price
+    }
+    session['booking_data'] = booking_info
+    return redirect(url_for('payment_page'))
+
+@app.route('/payment')
+def payment_page():
+    if 'booking_data' not in session:
+        return redirect('/')
+    return render_template('payment.html', booking=session['booking_data'])
 
 @app.route('/all-bikes')
 def all_bikes():
-    return render_template('all-bikes.html', bikes=Bike.query.all())
+    search_q = request.args.get('search','').strip()
+    if search_q:
+        bikes = Bike.query.filter(Bike.name.ilike(f'%{search_q}%') | Bike.type.ilike(f'%{search_q}%')).all()
+    else:
+        bikes = Bike.query.all()
+    return render_template('all-bikes.html', bikes=bikes)
+
+@app.route('/')
+def home():
+    bikes = Bike.query.limit(6).all()
+    return render_template('index.html', bikes=bikes)
 
 @app.route('/about')
 def about():
@@ -78,60 +137,78 @@ def contact():
 
 @app.route('/login', methods=["GET", "POST"])
 def login():
+    if "username" in session:
+        return redirect('/')
     if request.method == "POST":
-        user = User.query.filter_by(email=request.form["email"], password=request.form["password"]).first()
+        email = request.form["email"].strip()
+        password = request.form["password"].strip()
+        if not email.endswith("@gmail.com"):
+            return "<script>alert('Only Gmail Accounts Are Allowed!');window.location.href='/login'</script>"
+        user = User.query.filter_by(email=email, password=password).first()
         if user:
-            session["user"] = user.email
+            session["username"] = user.email
+            session["fullname"] = user.fullname
             return redirect('/')
-        flash("Wrong email or password")
+        return "<script>alert('Wrong Email or Password!');window.location.href='/login'</script>"
     return render_template('login.html')
 
 @app.route('/register', methods=["GET", "POST"])
 def register():
+    if "username" in session:
+        return redirect('/')
     if request.method == "POST":
-        if User.query.filter_by(email=request.form["email"]).first():
-            flash("Email already registered")
-            return redirect('/register')
-        new_user = User(email=request.form["email"], password=request.form["password"])
+        email = request.form["email"].strip()
+        password = request.form["password"].strip()
+        if not email.endswith("@gmail.com"):
+            return "<script>alert('Only Gmail Address Allowed!');window.location.href='/register'</script>"
+        if User.query.filter_by(email=email).first():
+            return "<script>alert('This Gmail Already Registered!');window.location.href='/login'</script>"
+        session['reg_email'] = email
+        session['reg_pass'] = password
+        return redirect('/fill-profile')
+    return render_template('register.html')
+
+@app.route('/fill-profile', methods=["GET","POST"])
+def fill_profile():
+    if 'reg_email' not in session:
+        return redirect('/register')
+    if request.method == "POST":
+        fullname = request.form.get('fullname','').strip()
+        phone = request.form.get('phone','').strip()
+        email = session['reg_email']
+        password = session['reg_pass']
+        new_user = User(email=email,password=password,fullname=fullname,phone=phone)
         db.session.add(new_user)
         db.session.commit()
-        flash("Register successful, please login")
-        return redirect('/login')
-    return render_template('register.html')
+        session.pop('reg_email', None)
+        session.pop('reg_pass', None)
+        session["username"] = email
+        session["fullname"] = fullname
+        return redirect(url_for('home'))
+    return render_template('fill-profile.html')
 
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect('/')
 
-@app.route('/ai-chat', methods=['POST'])
-def ai_chat():
-    user_msg = request.form.get("msg", "")
-    reply = dogesh_ai(user_msg)
-    return reply
-
-@app.route('/init-bikes')
 def init_bikes():
-    db.drop_all()
-    db.create_all()
-    bike_list = [
-        Bike(name="Bajaj", image="bajaj.jpg", price=75, cc=160, hp=15, weight=148, mileage=42, is_premium=True),
-        Bike(name="BMW", image="bmw.jpg", price=320, cc=1000, hp=165, weight=210, mileage=18, is_premium=True),
-        Bike(name="CFMoto", image="cfmoto.jpg", price=190, cc=450, hp=48, weight=205, mileage=25),
-        Bike(name="Hayabusa", image="hayabusa.jpg", price=450, cc=1340, hp=197, weight=266, mileage=14),
-        Bike(name="Hero", image="hero-bike.jpg", price=60, cc=125, hp=11, weight=132, mileage=50),
-        Bike(name="Suzuki", image="suzuki.jpg", price=240, cc=600, hp=100, weight=193, mileage=22),
-        Bike(name="Yamaha", image="yamaha.jpg", price=270, cc=890, hp=119, weight=197, mileage=20),
-    ]
-    db.session.bulk_save_objects(bike_list)
-    db.session.commit()
-    return "Bike data inserted successfully!"
+    if Bike.query.count() == 0:
+        bike_list = [
+            {"name":"Bajaj Bike","image":"bajaj.jpg","type":"Standard","price":75,"cc":"160 CC","horsepower":"15 HP","weight":"148 KG","mileage":"42 KM/L"},
+            {"name":"BMW Bike","image":"bmw.jpg","type":"Sports","price":320,"cc":"1000 CC","horsepower":"165 HP","weight":"210 KG","mileage":"18 KM/L"},
+            {"name":"CFMoto Bike","image":"cfmoto.jpg","type":"Adventure","price":190,"cc":"450 CC","horsepower":"48 HP","weight":"205 KG","mileage":"25 KM/L"},
+            {"name":"Hayabusa","image":"hayabusa.jpg","type":"Superbike","price":450,"cc":"1340 CC","horsepower":"197 HP","weight":"266 KG","mileage":"14 KM/L"},
+            {"name":"Repsol","image":"hero-bike.jpg","type":"Commuter","price":60,"cc":"125 CC","horsepower":"11 HP","weight":"132 KG","mileage":"50 KM/L"},
+            {"name":"Yamaha Bike","image":"yamaha.jpg","type":"Sports Naked","price":270,"cc":"890 CC","horsepower":"119 HP","weight":"197 KG","mileage":"20 KM/L"}
+        ]
+        for b in bike_list:
+            db.session.add(Bike(**b))
+        db.session.commit()
 
-# Render Port Fix (Critical Line For Hosting)
 with app.app_context():
     db.create_all()
+    init_bikes()
 
 if __name__ == '__main__':
-    import os
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(debug=True)
